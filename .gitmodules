@@ -1,0 +1,3 @@
+[submodule "lib/network_lib"]
+	path = lib/network_lib
+	url = git@github.com:Foxyman-sama/network_lib.git
