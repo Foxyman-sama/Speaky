@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package speaky;
+
+message Message {
+    string name = 1;
+    string message = 2;
+    string time = 3;
+}
+
+message Chat {
+    repeated Message message = 1;
+}

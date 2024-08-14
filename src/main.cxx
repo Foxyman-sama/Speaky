@@ -1,1 +1,3 @@
-int main() {}
+#include <print>
+
+int main() { std::print("Hello, World!\n"); }
