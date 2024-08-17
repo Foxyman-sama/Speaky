@@ -1,3 +1,3 @@
 #include <print>
 
-int main() { std::print("Hello, World!\n"); }
+int main(int argc, char** argv) {}
