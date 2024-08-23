@@ -8,7 +8,7 @@ namespace speaky {
 
 class Observer {
  public:
-  void update(const std::string& message) {}
+  virtual void update(const std::string& message) = 0;
 };
 
 using ObserverPtr = std::shared_ptr<Observer>;

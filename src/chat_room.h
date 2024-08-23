@@ -11,11 +11,19 @@ namespace speaky {
 
 class ChatRoom : public Observer {
  public:
+  void update(const std::string& message) override { deliver(message); }
+
   void join(ParticipantPtr participant) { participants.insert(participant); }
 
   int get_number_of_members() { return participants.size(); }
 
  private:
+  void deliver(const std::string& message) {
+    for (auto&& participant : participants) {
+      participant->deliver(message);
+    }
+  }
+
   std::set<ParticipantPtr> participants;
 };
 

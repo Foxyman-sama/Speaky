@@ -18,11 +18,23 @@ int main() {
   return RUN_ALL_TESTS();
 }
 
+class ParticipantMock : public Participant {
+ public:
+  ParticipantMock(const std::string& name) : Participant { name } {}
+
+  virtual ~ParticipantMock() {}
+
+  MOCK_METHOD(void, deliver, (const std::string& message), (override));
+  MOCK_METHOD(void, notify, (const std::string& message), (override));
+
+  void pretend_to_get_message(const std::string& message) { notify(message); }
+};
+
 class register_user_tests : public Test, public Input {};
 
 TEST_F(register_user_tests, register_common_user) {
   constexpr int chat_id { 0 };
-  auto participant { std::make_shared<Participant>("Dima") };
+  auto participant { std::make_shared<ParticipantMock>("Dima") };
 
   register_user(chat_id, participant);
 

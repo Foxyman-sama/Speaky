@@ -13,9 +13,19 @@ class Participant {
  public:
   explicit Participant(const std::string& name) : name { name } {}
 
+  virtual ~Participant() {}
+
   void attach(ObserverPtr observer) { observers.push_back(observer); }
 
- private:
+  virtual void deliver(const std::string& message) = 0;
+
+  virtual void notify(const std::string& message) {
+    for (auto&& observer : observers) {
+      observer->update(message);
+    }
+  }
+
+ protected:
   std::string name;
   std::vector<ObserverPtr> observers;
 };
