@@ -16,6 +16,8 @@ int main() {
   return RUN_ALL_TESTS();
 }
 
+// TODO REFACTOR ALL DEPENDING CLASSES
+
 class ParticipantMock : public Participant {
  public:
   ParticipantMock(const std::string& name) : Participant { name } {}

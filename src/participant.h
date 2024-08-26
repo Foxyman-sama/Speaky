@@ -19,7 +19,7 @@ class Participant {
 
   virtual void deliver(const std::string& message) = 0;
 
-  virtual void notify(const std::string& message) {
+  void notify(const std::string& message) {
     for (auto&& observer : observers) {
       observer->update(message);
     }
