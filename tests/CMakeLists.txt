@@ -1,2 +1,3 @@
 add_subdirectory(register_user)
 add_subdirectory(send_message)
+add_subdirectory(serialize)
