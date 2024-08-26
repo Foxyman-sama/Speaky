@@ -25,7 +25,6 @@ class ParticipantMock : public Participant {
   virtual ~ParticipantMock() {}
 
   MOCK_METHOD(void, deliver, (const std::string& message), (override));
-  MOCK_METHOD(void, notify, (const std::string& message), (override));
 
   void pretend_to_get_message(const std::string& message) { notify(message); }
 };
