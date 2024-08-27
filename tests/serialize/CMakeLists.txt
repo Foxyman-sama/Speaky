@@ -1,20 +1,22 @@
-cmake_minimum_required(VERSION 3.29)
+cmake_minimum_required(VERSION 3.30)
 project(serialize_tests)
 
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(CMAKE_CXX_STANDARD 26)
-set(CMAKE_CXX_EXTENSIONS OFF)
 
 find_package(GTest REQUIRED)
 
 add_executable(${PROJECT_NAME} serialize_tests.cc)
 target_include_directories(${PROJECT_NAME} PUBLIC 
     ${CMAKE_SOURCE_DIR}
-    "${CMAKE_BINARY_DIR}/proto"
+    ${CMAKE_BINARY_DIR}
 )
-target_link_libraries(${PROJECT_NAME}  
+target_link_libraries(${PROJECT_NAME} PUBLIC
     GTest::gtest_main
     GTest::gmock_main
+    proto_files
 )
+
+include_directories(${CMAKE_SOURCE_DIR}/proto)
 
 add_test(${PROJECT_NAME} ${PROJECT_NAME})
