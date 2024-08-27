@@ -8,7 +8,7 @@ namespace speaky {
 
 class ProtoClass {
  public:
-  virtual std::string serialize() = 0;
+  virtual std::string serialize() const = 0;
 
   virtual void deserialize(const std::string& serialized) = 0;
 };
@@ -17,11 +17,11 @@ class MessageProto : public ProtoClass {
  public:
   MessageProto() noexcept = default;
 
-  MessageProto(const std::string& message) { obj.set_message(message); }
+  MessageProto(const std::string& message) noexcept { obj.set_message(message); }
 
-  MessageProto(const char* const message) { obj.set_message(message); }
+  MessageProto(const char* const message) noexcept { obj.set_message(message); }
 
-  std::string serialize() override { return obj.SerializeAsString(); }
+  std::string serialize() const override { return obj.SerializeAsString(); }
 
   void deserialize(const std::string& serialized) override { obj.ParseFromString(serialized); }
 
@@ -45,7 +45,7 @@ class NewConnectionProto : public ProtoClass {
     obj.set_room_id(room_id);
   }
 
-  std::string serialize() override { return obj.SerializeAsString(); }
+  std::string serialize() const override { return obj.SerializeAsString(); }
 
   void deserialize(const std::string& serialized) override { obj.ParseFromString(serialized); }
 
