@@ -10,10 +10,14 @@
 #include <boost/asio/streambuf.hpp>
 #include <boost/asio/write.hpp>
 #include <boost/system/detail/error_code.hpp>
+#include <exception>
 #include <future>
 #include <memory>
+#include <optional>
+#include <print>
 #include <stdexcept>
 #include <thread>
+#include <variant>
 
 #include "deserialize.h"
 #include "input.h"
@@ -24,17 +28,21 @@ namespace speaky {
 
 constexpr char delim { '@' };
 
+inline std::string extract_from_buffer_until(boost::asio::streambuf&& buf, char delim);
+
 inline std::string read_until(boost::asio::ip::tcp::socket& socket, char delim) {
   boost::system::error_code ec;
   boost::asio::streambuf buf;
   boost::asio::read_until(socket, buf, delim, ec);
 
-  if (ec == boost::asio::error::eof) {
-    return "";
-  } else if (ec) {
+  if (ec) {
     throw std::runtime_error { ec.what() };
   }
 
+  return extract_from_buffer_until(std::move(buf), delim);
+}
+
+inline std::string extract_from_buffer_until(boost::asio::streambuf&& buf, char delim) {
   std::istream is { &buf };
   std::string serialized_data;
   std::getline(is, serialized_data, delim);
@@ -49,18 +57,23 @@ class ParticipantFromGadgets : public Participant {
   void deliver(const std::string& message) override { boost::asio::write(socket, boost::asio::buffer(message)); };
 
   void read() {
+    try {
+      try_read();
+    } catch (const std::exception& e) {
+      // TODO: disconnect
+      std::print("{0}", e.what());
+    }
+  }
+
+ private:
+  void try_read() {
     for (;;) {
       auto serialized_data { read_until(socket, delim) };
-      if (serialized_data.empty()) {
-        return;
-      }
-
       auto message { deserialize<MessageProto>(serialized_data) };
       notify(message.get_message());
     }
   }
 
- private:
   boost::asio::ip::tcp::socket socket;
 };
 
