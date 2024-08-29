@@ -23,6 +23,7 @@
 #include "input.h"
 #include "participant.h"
 #include "proto_classes_wrapper.h"
+#include "src/serialize.h"
 
 namespace speaky {
 
@@ -54,7 +55,10 @@ class ParticipantFromGadgets : public Participant {
   explicit ParticipantFromGadgets(const std::string& name, boost::asio::ip::tcp::socket&& socket)
       : Participant { name }, socket { std::move(socket) } {}
 
-  void deliver(const std::string& message) override { boost::asio::write(socket, boost::asio::buffer(message)); };
+  void deliver(const std::string& message) override {
+    auto send_message { serialize<MessageProto>(message) + delim };
+    boost::asio::write(socket, boost::asio::buffer(send_message));
+  };
 
   void read() {
     try {
