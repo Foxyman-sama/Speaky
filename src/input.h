@@ -22,7 +22,7 @@ class Input {
 
   void unregister_user(int chat_id, ParticipantPtr participant) {
     check_room_existence(chat_id);
-    rooms[chat_id]->kick(participant);
+    kick(chat_id, participant);
   }
 
  protected:
@@ -40,6 +40,8 @@ class Input {
       throw std::runtime_error { "The room wasn't found." };
     }
   }
+
+  void kick(int chat_id, ParticipantPtr participant) { rooms[chat_id]->kick(participant); }
 
   std::unordered_map<int, ChatRoomPtr> rooms;
 };
