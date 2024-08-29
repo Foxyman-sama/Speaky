@@ -2,6 +2,7 @@
 #define INPUT_H
 
 #include <memory>
+#include <stdexcept>
 #include <unordered_map>
 
 #include "chat_room.h"
@@ -18,6 +19,8 @@ class Input {
 
     connect_participant_with_room(chat_id, participant);
   }
+
+  void unregister_user(int chat_id, ParticipantPtr participant) { rooms[chat_id]->kick(participant); }
 
  protected:
   bool is_room_found(int chat_id) const noexcept { return rooms.find(chat_id) != rooms.end(); }

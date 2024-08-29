@@ -15,6 +15,8 @@ class ChatRoom : public Observer {
 
   void join(ParticipantPtr participant) { participants.insert(participant); }
 
+  void kick(ParticipantPtr participant) { participants.erase(participant); }
+
   int get_number_of_members() { return participants.size(); }
 
  private:
