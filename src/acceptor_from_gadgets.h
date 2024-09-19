@@ -17,6 +17,7 @@
 #include <print>
 #include <stdexcept>
 #include <thread>
+#include <utility>
 #include <variant>
 
 #include "deserialize.h"
@@ -90,26 +91,36 @@ using ParticipantFromGadgetsPtr = std::shared_ptr<ParticipantFromGadgets>;
 class AcceptorFromGadgets {
  public:
   AcceptorFromGadgets(unsigned short port) : acceptor { io_context, boost::asio::ip::tcp::v4() } {
-    acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
-    acceptor.bind(boost::asio::ip::tcp::endpoint { boost::asio::ip::address_v4::any(), port });
+    using namespace boost::asio::ip;
+
+    acceptor.set_option(tcp::acceptor::reuse_address(true));
+    acceptor.bind(tcp::endpoint { address_v4::any(), port });
     acceptor.listen(max_connections_wait);
   }
 
   void accept() {
     for (;;) {
-      auto socket { acceptor.accept() };
-      auto user_info { read_info(socket) };
-      make_connection(std::move(socket), user_info);
+      handle_new_connections();
     }
   }
 
  private:
-  NewConnectionProto read_info(boost::asio::ip::tcp::socket& socket) {
+  void handle_new_connections() {
+    auto&& [socket, user_info] { accept_new_connection() };
+    make_participant(std::move(socket), user_info);
+  }
+
+  std::pair<boost::asio::ip::tcp::socket, NewConnectionProto> accept_new_connection() {
+    auto socket { acceptor.accept() };
+    return { std::move(socket), read_user_info(socket) };
+  }
+
+  NewConnectionProto read_user_info(boost::asio::ip::tcp::socket& socket) {
     auto serialized_data { read_until(socket, delim) };
     return deserialize<NewConnectionProto>(serialized_data);
   }
 
-  void make_connection(boost::asio::ip::tcp::socket&& socket, const NewConnectionProto& user_info) {
+  void make_participant(boost::asio::ip::tcp::socket&& socket, const NewConnectionProto& user_info) {
     auto participant { connect_socket_with_participant(std::move(socket), user_info) };
     input.register_user(user_info.get_room_id(), participant);
     make_new_handle_thread(participant);
