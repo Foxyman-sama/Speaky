@@ -3,11 +3,9 @@
 
 #include <memory>
 #include <unordered_map>
-#include <vector>
 
-#include "src/chat_room.h"
+#include "../participant_mock.h"
 #include "src/input.h"
-#include "src/participant.h"
 
 using namespace testing;
 using namespace speaky;
@@ -17,15 +15,6 @@ int main() {
   InitGoogleMock();
   return RUN_ALL_TESTS();
 }
-
-class ParticipantMock : public Participant {
- public:
-  ParticipantMock(const std::string& name) : Participant { name } {}
-
-  virtual ~ParticipantMock() {}
-
-  MOCK_METHOD(void, deliver, (const std::string& message), (override));
-};
 
 class register_user_tests : public Test, public Input {};
 

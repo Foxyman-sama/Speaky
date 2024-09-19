@@ -4,7 +4,6 @@
 #include <memory>
 #include <set>
 
-#include "observer.h"
 #include "participant.h"
 
 namespace speaky {
@@ -18,6 +17,8 @@ class ChatRoom : public Observer {
   void kick(ParticipantPtr participant) { participants.erase(participant); }
 
   int get_number_of_members() { return participants.size(); }
+
+  virtual void disconnect(ParticipantPtr participant) override { participants.erase(participant); }
 
  private:
   void deliver(const std::string& message) {

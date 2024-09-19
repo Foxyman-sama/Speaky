@@ -3,11 +3,11 @@
 
 #include <gmock/gmock.h>
 
-#include <string>
-
 #include "src/participant.h"
 
-class ParticipantMock : public speaky::Participant {
+using namespace speaky;
+
+class ParticipantMock : public Participant {
  public:
   ParticipantMock(const std::string& name) : Participant { name } {}
 

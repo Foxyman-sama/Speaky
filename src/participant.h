@@ -5,11 +5,22 @@
 #include <string>
 #include <vector>
 
-#include "observer.h"
-
 namespace speaky {
 
-class Participant {
+class Participant;
+
+using ParticipantPtr = std::shared_ptr<Participant>;
+
+class Observer {
+ public:
+  virtual void update(const std::string& message) = 0;
+
+  virtual void disconnect(ParticipantPtr participant) = 0;
+};
+
+using ObserverPtr = std::shared_ptr<Observer>;
+
+class Participant : public std::enable_shared_from_this<Participant> {
  public:
   explicit Participant(const std::string& name) : name { name } {}
 
@@ -25,12 +36,17 @@ class Participant {
     }
   }
 
+  void disconnect() {
+    auto self { shared_from_this() };
+    for (auto&& observer : observers) {
+      observer->disconnect(self);
+    }
+  }
+
  protected:
   std::string name;
   std::vector<ObserverPtr> observers;
 };
-
-using ParticipantPtr = std::shared_ptr<Participant>;
 
 }  // namespace speaky
 
