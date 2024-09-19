@@ -64,8 +64,8 @@ class ParticipantFromGadgets : public Participant {
     try {
       try_read();
     } catch (const std::exception& e) {
-      // TODO: disconnect
-      std::print("{0}", e.what());
+      disconnect();
+      std::print("User: [{0}] has been disconnected. Reason: [{1}]\n", name, e.what());
     }
   }
 
@@ -92,13 +92,13 @@ class AcceptorFromGadgets {
   void accept() {
     for (;;) {
       auto socket { acceptor.accept() };
-      auto user_info { acceptor_info(socket) };
+      auto user_info { read_info(socket) };
       make_connection(std::move(socket), user_info);
     }
   }
 
  private:
-  NewConnectionProto acceptor_info(boost::asio::ip::tcp::socket& socket) {
+  NewConnectionProto read_info(boost::asio::ip::tcp::socket& socket) {
     auto serialized_data { read_until(socket, delim) };
     return deserialize<NewConnectionProto>(serialized_data);
   }
@@ -106,6 +106,8 @@ class AcceptorFromGadgets {
   void make_connection(boost::asio::ip::tcp::socket&& socket, const NewConnectionProto& user_info) {
     auto participant { std::make_shared<ParticipantFromGadgets>(user_info.get_name(), std::move(socket)) };
     input.register_user(user_info.get_room_id(), participant);
+
+    std::print("User: [{0}] has been connected.\n", user_info.get_name());
 
     std::thread th { [participant]() { participant->read(); } };
     th.detach();
