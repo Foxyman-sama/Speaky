@@ -13,7 +13,7 @@ using ParticipantPtr = std::shared_ptr<Participant>;
 
 class Observer {
  public:
-  virtual void update(const std::string& message) = 0;
+  virtual void deliver(const std::string& message) = 0;
 
   virtual void disconnect(ParticipantPtr participant) = 0;
 };
@@ -32,7 +32,7 @@ class Participant : public std::enable_shared_from_this<Participant> {
 
   void notify(const std::string& message) {
     for (auto&& observer : observers) {
-      observer->update(message);
+      observer->deliver(message);
     }
   }
 

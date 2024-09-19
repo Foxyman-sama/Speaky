@@ -10,23 +10,19 @@ namespace speaky {
 
 class ChatRoom : public Observer {
  public:
-  void update(const std::string& message) override { deliver(message); }
-
-  void join(ParticipantPtr participant) { participants.insert(participant); }
-
-  void kick(ParticipantPtr participant) { participants.erase(participant); }
-
-  int get_number_of_members() { return participants.size(); }
-
-  virtual void disconnect(ParticipantPtr participant) override { participants.erase(participant); }
-
- private:
-  void deliver(const std::string& message) {
+  void deliver(const std::string& message) override {
     for (auto&& participant : participants) {
       participant->deliver(message);
     }
   }
 
+  void join(ParticipantPtr participant) { participants.insert(participant); }
+
+  int get_number_of_members() { return participants.size(); }
+
+  void disconnect(ParticipantPtr participant) override { participants.erase(participant); }
+
+ private:
   std::set<ParticipantPtr> participants;
 };
 
