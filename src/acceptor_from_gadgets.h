@@ -85,6 +85,8 @@ class ParticipantFromGadgets : public Participant {
   boost::asio::ip::tcp::socket socket;
 };
 
+using ParticipantFromGadgetsPtr = std::shared_ptr<ParticipantFromGadgets>;
+
 class AcceptorFromGadgets {
  public:
   AcceptorFromGadgets(unsigned short port) : acceptor { io_context, boost::asio::ip::tcp::v4() } {
@@ -108,11 +110,17 @@ class AcceptorFromGadgets {
   }
 
   void make_connection(boost::asio::ip::tcp::socket&& socket, const NewConnectionProto& user_info) {
-    auto participant { std::make_shared<ParticipantFromGadgets>(user_info.get_name(), std::move(socket)) };
+    auto participant { connect_socket_with_participant(std::move(socket), user_info) };
     input.register_user(user_info.get_room_id(), participant);
+    make_new_handle_thread(participant);
+  }
 
-    std::print("User: [{0}] has been connected.\n", user_info.get_name());
+  ParticipantFromGadgetsPtr connect_socket_with_participant(boost::asio::ip::tcp::socket&& socket,
+                                                            const NewConnectionProto& user_info) {
+    return std::make_shared<ParticipantFromGadgets>(user_info.get_name(), std::move(socket));
+  }
 
+  void make_new_handle_thread(ParticipantFromGadgetsPtr participant) {
     std::thread th { [participant]() { participant->read(); } };
     th.detach();
   }

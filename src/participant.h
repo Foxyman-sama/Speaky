@@ -30,11 +30,11 @@ class Participant : public std::enable_shared_from_this<Participant> {
 
   void attach(ObserverPtr observer) { observers.push_back(observer); }
 
-  virtual void send(const std::string& message) = 0;
-
   void notify(const std::string& message) {
     std::ranges::for_each(observers, [&](auto&& observer) { observer->send(message); });
   }
+
+  virtual void send(const std::string& message) = 0;
 
   void disconnect() {
     auto self { shared_from_this() };
