@@ -55,9 +55,9 @@ class ParticipantFromGadgets : public Participant {
   explicit ParticipantFromGadgets(const std::string& name, boost::asio::ip::tcp::socket&& socket)
       : Participant { name }, socket { std::move(socket) } {}
 
-  void deliver(const std::string& message) override {
-    auto send_message { serialize<MessageProto>(message) + delim };
-    boost::asio::write(socket, boost::asio::buffer(send_message));
+  void send(const std::string& message) override {
+    auto serialized_message { serialize_message(message) };
+    do_send(serialized_message);
   };
 
   void read() {
@@ -70,6 +70,10 @@ class ParticipantFromGadgets : public Participant {
   }
 
  private:
+  std::string serialize_message(const std::string& message) { return serialize<MessageProto>(message) + delim; }
+
+  void do_send(const std::string& message) { boost::asio::write(socket, boost::asio::buffer(message)); }
+
   void try_read() {
     for (;;) {
       auto serialized_data { read_until(socket, delim) };

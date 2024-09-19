@@ -13,7 +13,7 @@ class ParticipantMock : public Participant {
 
   virtual ~ParticipantMock() {}
 
-  MOCK_METHOD(void, deliver, (const std::string& message), (override));
+  MOCK_METHOD(void, send, (const std::string& message), (override));
 };
 
 #endif
