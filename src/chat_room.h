@@ -1,7 +1,9 @@
 #ifndef CHAT_ROOM_H
 #define CHAT_ROOM_H
 
+#include <algorithm>
 #include <memory>
+#include <ranges>
 #include <set>
 
 #include "participant.h"
@@ -11,9 +13,7 @@ namespace speaky {
 class ChatRoom : public Observer {
  public:
   void deliver(const std::string& message) override {
-    for (auto&& participant : participants) {
-      participant->deliver(message);
-    }
+    std::ranges::for_each(participants, [&](auto&& participant) { participant->deliver(message); });
   }
 
   void join(ParticipantPtr participant) { participants.insert(participant); }

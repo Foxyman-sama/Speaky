@@ -2,6 +2,7 @@
 #define PARTICIPANT_H
 
 #include <memory>
+#include <ranges>
 #include <string>
 #include <vector>
 
@@ -31,16 +32,12 @@ class Participant : public std::enable_shared_from_this<Participant> {
   virtual void deliver(const std::string& message) = 0;
 
   void notify(const std::string& message) {
-    for (auto&& observer : observers) {
-      observer->deliver(message);
-    }
+    std::ranges::for_each(observers, [&](auto&& observer) { observer->deliver(message); });
   }
 
   void disconnect() {
     auto self { shared_from_this() };
-    for (auto&& observer : observers) {
-      observer->disconnect(self);
-    }
+    std::ranges::for_each(observers, [&self](auto&& observer) { observer->disconnect(self); });
   }
 
  protected:
