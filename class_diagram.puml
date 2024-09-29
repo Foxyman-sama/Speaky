@@ -1,0 +1,64 @@
+@startuml class_diagram
+
+!theme toy
+
+ProtoClass <|-- MessageProto
+ProtoClass <|-- NewConnectionProto
+
+Observer <--> Participant
+
+interface ProtoClass {
+    + {abstract} serialize()
+    + {abstract} deserialize()
+}
+
+class MessageProto {
+    + MessageProto(message)
+    + get_message()
+
+    - obj
+}
+
+class NewConnectionProto {
+    + NewConnectionProto(name, room_id)
+    + get_name()
+    + get_room_id()
+
+    - obj
+}
+
+abstract Participant {
+    + Participant(name)
+    + attach(observer)
+    + notify(message)
+    + {abstract} send(message)
+    + disconnect()
+
+    - name
+    - observers
+}
+
+class ParticipantFromGadgets {
+    + ParticipantFromGadgets(name, socket)
+    + read()
+}
+
+interface Observer {
+    + {abstract} send(message)
+    + {abstract} disconnect(participant)
+}
+
+class ChatRoom {
+    + join(participant)
+    + get_number_of_members()
+
+    - participants
+}
+
+class Input {
+    + register_user(chat_id, participant)
+
+    - rooms
+}
+
+@enduml

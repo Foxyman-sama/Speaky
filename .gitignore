@@ -2,3 +2,6 @@
 \build
 \.cache
 \.venv
+\out
+*.png
+*.html
