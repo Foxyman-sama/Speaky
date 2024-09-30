@@ -50,20 +50,33 @@ class AcceptorFromGadgets {
   void accept() {
     for (;;) {
       auto socket { acceptor.accept() };
-      boost::asio::streambuf buf;
-      boost::asio::read_until(socket, buf, delim);
-
-      std::string temp;
-      std::istream is { &buf };
-      std::getline(is, temp, delim);
-
-      auto new_connection { deserialize<NewConnectionProto>(temp) };
-      auto participant { std::make_shared<ParticipantFromGadgets>(new_connection.get_name(), std::move(socket)) };
-      input.register_user(new_connection.get_room_id(), participant);
+      auto request { read_request_from_socket(socket) };
+      auto participant { make_connection(std::move(socket), request) };
+      input.register_user(request.get_room_id(), participant);
     }
   }
 
  private:
+  NewConnectionProto read_request_from_socket(boost::asio::ip::tcp::socket& socket) {
+    const auto data { read_raw_data_from_socket(socket) };
+    return deserialize<NewConnectionProto>(data);
+  }
+
+  std::string read_raw_data_from_socket(boost::asio::ip::tcp::socket& socket) {
+    boost::asio::streambuf buf;
+    boost::asio::read_until(socket, buf, delim);
+
+    std::string result;
+    std::istream is { &buf };
+    std::getline(is, result, delim);
+
+    return result;
+  }
+
+  ParticipantPtr make_connection(boost::asio::ip::tcp::socket&& socket, NewConnectionProto& nc) {
+    return std::make_shared<ParticipantFromGadgets>(nc.get_name(), std::move(socket));
+  }
+
   static constexpr int max_connections_wait { 30 };
 
   Input input;
