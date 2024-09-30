@@ -12,22 +12,22 @@ namespace speaky {
 
 class Input {
  public:
-  void register_user(int chat_id, ParticipantPtr participant) {
-    if (is_room_found(chat_id) == false) {
-      create_room(chat_id);
+  void register_user(int room_id, ParticipantPtr participant) {
+    if (is_room_found(room_id) == false) {
+      create_room(room_id);
     }
 
-    connect_participant_with_room(chat_id, participant);
+    connect_participant_with_room(room_id, participant);
   }
 
  protected:
-  bool is_room_found(int chat_id) const noexcept { return rooms.find(chat_id) != rooms.end(); }
+  bool is_room_found(int room_id) const noexcept { return rooms.find(room_id) != rooms.end(); }
 
-  void create_room(int chat_id) noexcept { rooms[chat_id] = std::make_shared<ChatRoom>(); }
+  void create_room(int room_id) noexcept { rooms[room_id] = std::make_shared<ChatRoom>(); }
 
-  void connect_participant_with_room(int chat_id, ParticipantPtr participant) {
-    participant->attach(rooms[chat_id]);
-    rooms[chat_id]->join(participant);
+  void connect_participant_with_room(int room_id, ParticipantPtr participant) {
+    participant->attach(rooms[room_id]);
+    rooms[room_id]->join(participant);
   }
 
   std::unordered_map<int, ChatRoomPtr> rooms;

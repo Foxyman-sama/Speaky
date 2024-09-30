@@ -22,7 +22,7 @@ class ParticipantMock : public Participant {
 
   virtual ~ParticipantMock() {}
 
-  MOCK_METHOD(void, deliver, (const std::string& message), (override));
+  MOCK_METHOD(void, send, (const std::string& message), (override));
 
   void pretend_to_get_message(const std::string& message) { notify(message); }
 };
@@ -39,8 +39,8 @@ class send_message_tests : public Test, public Input {
 };
 
 TEST_F(send_message_tests, send_message) {
-  EXPECT_CALL(participant1, deliver(test_message)).Times(1);
-  EXPECT_CALL(participant2, deliver(test_message)).Times(1);
+  EXPECT_CALL(participant1, send(test_message)).Times(1);
+  EXPECT_CALL(participant2, send(test_message)).Times(1);
 
   register_user(test_room_id, std::shared_ptr<ParticipantMock>(&participant1, [](auto*) {}));
   register_user(test_room_id, std::shared_ptr<ParticipantMock>(&participant2, [](auto*) {}));

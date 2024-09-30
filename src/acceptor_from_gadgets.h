@@ -2,22 +2,13 @@
 #define ACCEPTOR_FROM_GADGETS_H
 
 #include <boost/asio.hpp>
-#include <boost/asio/error.hpp>
-#include <boost/asio/impl/read_until.hpp>
-#include <boost/asio/io_context.hpp>
-#include <boost/asio/ip/address_v4.hpp>
-#include <boost/asio/registered_buffer.hpp>
-#include <boost/asio/streambuf.hpp>
 #include <boost/asio/write.hpp>
-#include <boost/system/detail/error_code.hpp>
 #include <exception>
-#include <future>
+#include <istream>
 #include <memory>
-#include <optional>
 #include <print>
-#include <stdexcept>
-#include <thread>
-#include <variant>
+#include <string>
+#include <utility>
 
 #include "deserialize.h"
 #include "input.h"
@@ -29,25 +20,15 @@ namespace speaky {
 
 constexpr char delim { '@' };
 
-inline std::string extract_from_buffer_until(boost::asio::streambuf&& buf, char delim);
-
-inline std::string read_until(boost::asio::ip::tcp::socket& socket, char delim) {
-  boost::system::error_code ec;
+inline std::string read_raw_data_from_socket(boost::asio::ip::tcp::socket& socket) {
   boost::asio::streambuf buf;
-  boost::asio::read_until(socket, buf, delim, ec);
+  boost::asio::read_until(socket, buf, delim);
 
-  if (ec) {
-    throw std::runtime_error { ec.what() };
-  }
-
-  return extract_from_buffer_until(std::move(buf), delim);
-}
-
-inline std::string extract_from_buffer_until(boost::asio::streambuf&& buf, char delim) {
+  std::string result;
   std::istream is { &buf };
-  std::string serialized_data;
-  std::getline(is, serialized_data, delim);
-  return serialized_data;
+  std::getline(is, result, delim);
+
+  return result;
 }
 
 class ParticipantFromGadgets : public Participant {
@@ -55,60 +36,66 @@ class ParticipantFromGadgets : public Participant {
   explicit ParticipantFromGadgets(const std::string& name, boost::asio::ip::tcp::socket&& socket)
       : Participant { name }, socket { std::move(socket) } {}
 
-  void deliver(const std::string& message) override {
-    auto send_message { serialize<MessageProto>(message) + delim };
-    boost::asio::write(socket, boost::asio::buffer(send_message));
-  };
+  void send(const std::string& message) override {
+    const auto serialized_message { serialize<MessageProto>(message) + delim };
+    boost::asio::write(socket, boost::asio::buffer(serialized_message));
+  }
 
   void read() {
     try {
       try_read();
     } catch (const std::exception& e) {
-      // TODO: disconnect
-      std::print("{0}", e.what());
+      std::print("{0}\n", e.what());
+      disconnect();
     }
   }
 
  private:
   void try_read() {
     for (;;) {
-      auto serialized_data { read_until(socket, delim) };
-      auto message { deserialize<MessageProto>(serialized_data) };
+      const auto message { read_message_from_socket() };
       notify(message.get_message());
     }
+  }
+
+  MessageProto read_message_from_socket() {
+    const auto data { read_raw_data_from_socket(socket) };
+    return deserialize<MessageProto>(data);
   }
 
   boost::asio::ip::tcp::socket socket;
 };
 
+using ParticipantFromGadgetsPtr = std::shared_ptr<ParticipantFromGadgets>;
+
 class AcceptorFromGadgets {
  public:
   AcceptorFromGadgets(unsigned short port) : acceptor { io_context, boost::asio::ip::tcp::v4() } {
-    acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
-    acceptor.bind(boost::asio::ip::tcp::endpoint { boost::asio::ip::address_v4::any(), port });
+    using namespace boost::asio::ip;
+
+    acceptor.set_option(tcp::acceptor::reuse_address(true));
+    acceptor.bind(tcp::endpoint { address_v4::any(), port });
     acceptor.listen(max_connections_wait);
   }
 
   void accept() {
     for (;;) {
       auto socket { acceptor.accept() };
-      auto user_info { acceptor_info(socket) };
-      make_connection(std::move(socket), user_info);
+      auto request { read_request_from_socket(socket) };
+      auto participant { make_connection(std::move(socket), request) };
+      input.register_user(request.get_room_id(), participant);
+      participant->read();
     }
   }
 
  private:
-  NewConnectionProto acceptor_info(boost::asio::ip::tcp::socket& socket) {
-    auto serialized_data { read_until(socket, delim) };
-    return deserialize<NewConnectionProto>(serialized_data);
+  NewConnectionProto read_request_from_socket(boost::asio::ip::tcp::socket& socket) {
+    const auto data { read_raw_data_from_socket(socket) };
+    return deserialize<NewConnectionProto>(data);
   }
 
-  void make_connection(boost::asio::ip::tcp::socket&& socket, const NewConnectionProto& user_info) {
-    auto participant { std::make_shared<ParticipantFromGadgets>(user_info.get_name(), std::move(socket)) };
-    input.register_user(user_info.get_room_id(), participant);
-
-    std::thread th { [participant]() { participant->read(); } };
-    th.detach();
+  ParticipantFromGadgetsPtr make_connection(boost::asio::ip::tcp::socket&& socket, NewConnectionProto& nc) {
+    return std::make_shared<ParticipantFromGadgets>(nc.get_name(), std::move(socket));
   }
 
   static constexpr int max_connections_wait { 30 };

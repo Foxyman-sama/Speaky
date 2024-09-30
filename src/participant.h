@@ -1,6 +1,7 @@
 #ifndef PARTICIPANT_H
 #define PARTICIPANT_H
 
+#include <algorithm>
 #include <memory>
 #include <ranges>
 #include <string>
@@ -14,7 +15,7 @@ using ParticipantPtr = std::shared_ptr<Participant>;
 
 class Observer {
  public:
-  virtual void deliver(const std::string& message) = 0;
+  virtual void send(const std::string& message) = 0;
 
   virtual void disconnect(ParticipantPtr participant) = 0;
 };
@@ -29,11 +30,11 @@ class Participant : public std::enable_shared_from_this<Participant> {
 
   void attach(ObserverPtr observer) { observers.push_back(observer); }
 
-  virtual void deliver(const std::string& message) = 0;
-
   void notify(const std::string& message) {
-    std::ranges::for_each(observers, [&](auto&& observer) { observer->deliver(message); });
+    std::ranges::for_each(observers, [&](auto&& observer) { observer->send(message); });
   }
+
+  virtual void send(const std::string& message) = 0;
 
   void disconnect() {
     auto self { shared_from_this() };

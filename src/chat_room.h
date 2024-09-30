@@ -12,8 +12,8 @@ namespace speaky {
 
 class ChatRoom : public Observer {
  public:
-  void deliver(const std::string& message) override {
-    std::ranges::for_each(participants, [&](auto&& participant) { participant->deliver(message); });
+  void send(const std::string& message) override {
+    std::ranges::for_each(participants, [&](auto&& participant) { participant->send(message); });
   }
 
   void join(ParticipantPtr participant) { participants.insert(participant); }

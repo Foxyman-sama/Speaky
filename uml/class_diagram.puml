@@ -1,0 +1,94 @@
+@startuml class_diagram
+
+header Architecture
+
+!theme toy
+
+ProtoClass <|-- MessageProto
+ProtoClass <|-- NewConnectionProto
+
+Observer <--> Participant
+
+Participant <|-- ParticipantFromGadgets
+
+Observer <|-- ChatRoom
+
+ChatRoom <-- Input
+Participant <-- Input
+Input <-- AcceptorFromGadgets 
+ParticipantFromGadgets <-- AcceptorFromGadgets
+NewConnectionProto <-- AcceptorFromGadgets
+MessageProto <-- ParticipantFromGadgets
+
+
+interface ProtoClass {
+    + {abstract} ~ProtoClass()
+    + {abstract} serialize()
+    + {abstract} deserialize()
+}
+
+class MessageProto {
+    + MessageProto()
+    + MessageProto(message)
+    + get_message()
+
+    - obj
+}
+
+class NewConnectionProto {
+    + NewConnectionProto()
+    + NewConnectionProto(name, room_id)
+    + get_name()
+    + get_room_id()
+
+    - obj
+}
+
+abstract Participant {
+    + Participant(name)
+    + {abstract} ~Participant()
+    + attach(observer)
+    + notify(message)
+    + {abstract} send(message)
+    + disconnect()
+
+    # name
+    # observers
+}
+
+class AcceptorFromGadgets {
+    + AcceptorFromGadgets(port)
+    + accept()
+
+    - {static} max_connections_wait
+    - input
+    - io_context
+    - acceptor
+}
+
+class ParticipantFromGadgets {
+    + ParticipantFromGadgets(name, socket)
+    + read()
+
+    - socket
+}
+
+interface Observer {
+    + {abstract} send(message)
+    + {abstract} disconnect(participant)
+}
+
+class ChatRoom {
+    + join(participant)
+    + get_number_of_members()
+
+    - participants
+}
+
+class Input {
+    + register_user(room_id, participant)
+
+    - rooms
+}
+
+@enduml
