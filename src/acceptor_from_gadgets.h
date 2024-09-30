@@ -24,12 +24,28 @@ namespace speaky {
 
 constexpr char delim { '@' };
 
+std::string read_raw_data_from_socket(boost::asio::ip::tcp::socket& socket) {
+  boost::asio::streambuf buf;
+  boost::asio::read_until(socket, buf, delim);
+
+  std::string result;
+  std::istream is { &buf };
+  std::getline(is, result, delim);
+
+  return result;
+}
+
 class ParticipantFromGadgets : public Participant {
  public:
   explicit ParticipantFromGadgets(const std::string& name, boost::asio::ip::tcp::socket&& socket)
       : Participant { name }, socket { std::move(socket) } {}
 
-  void send(const std::string& message) {}
+  void send(const std::string& message) override {}
+
+  void handle() {
+    for (;;) {
+    }
+  }
 
  private:
   boost::asio::ip::tcp::socket socket;
@@ -53,6 +69,7 @@ class AcceptorFromGadgets {
       auto request { read_request_from_socket(socket) };
       auto participant { make_connection(std::move(socket), request) };
       input.register_user(request.get_room_id(), participant);
+      participant->handle();
     }
   }
 
@@ -62,18 +79,7 @@ class AcceptorFromGadgets {
     return deserialize<NewConnectionProto>(data);
   }
 
-  std::string read_raw_data_from_socket(boost::asio::ip::tcp::socket& socket) {
-    boost::asio::streambuf buf;
-    boost::asio::read_until(socket, buf, delim);
-
-    std::string result;
-    std::istream is { &buf };
-    std::getline(is, result, delim);
-
-    return result;
-  }
-
-  ParticipantPtr make_connection(boost::asio::ip::tcp::socket&& socket, NewConnectionProto& nc) {
+  ParticipantFromGadgetsPtr make_connection(boost::asio::ip::tcp::socket&& socket, NewConnectionProto& nc) {
     return std::make_shared<ParticipantFromGadgets>(nc.get_name(), std::move(socket));
   }
 
