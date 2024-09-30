@@ -82,7 +82,7 @@ class ChatRoom {
 }
 
 class Input {
-    + register_user(chat_id, participant)
+    + register_user(room_id, participant)
 
     - rooms
 }
