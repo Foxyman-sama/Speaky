@@ -4,16 +4,11 @@
 #include <boost/asio.hpp>
 #include <boost/asio/write.hpp>
 #include <exception>
-#include <future>
 #include <istream>
 #include <memory>
-#include <optional>
 #include <print>
-#include <stdexcept>
 #include <string>
-#include <thread>
 #include <utility>
-#include <variant>
 
 #include "deserialize.h"
 #include "input.h"
@@ -47,13 +42,22 @@ class ParticipantFromGadgets : public Participant {
   }
 
   void read() {
+    try {
+      try_read();
+    } catch (const std::exception& e) {
+      std::print("{0}\n", e.what());
+      disconnect();
+    }
+  }
+
+ private:
+  void try_read() {
     for (;;) {
       const auto message { read_message_from_socket() };
       notify(message.get_message());
     }
   }
 
- private:
   MessageProto read_message_from_socket() {
     const auto data { read_raw_data_from_socket(socket) };
     return deserialize<MessageProto>(data);
