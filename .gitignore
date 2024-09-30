@@ -3,5 +3,3 @@
 \.cache
 \.venv
 \out
-*.png
-*.html

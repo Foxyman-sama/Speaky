@@ -1,5 +1,7 @@
 @startuml class_diagram
 
+header Architecture
+
 !theme toy
 
 ProtoClass <|-- MessageProto
@@ -7,12 +9,23 @@ ProtoClass <|-- NewConnectionProto
 
 Observer <--> Participant
 
+Participant <|-- ParticipantFromGadgets
+
+Observer <|-- ChatRoom
+
+ChatRoom <-- Input
+Participant <-- Input
+Input <-- AcceptorFromGadgets 
+ParticipantFromGadgets <-- AcceptorFromGadgets
+
 interface ProtoClass {
+    + {abstract} ~ProtoClass()
     + {abstract} serialize()
     + {abstract} deserialize()
 }
 
 class MessageProto {
+    + MessageProto()
     + MessageProto(message)
     + get_message()
 
@@ -20,6 +33,7 @@ class MessageProto {
 }
 
 class NewConnectionProto {
+    + NewConnectionProto()
     + NewConnectionProto(name, room_id)
     + get_name()
     + get_room_id()
@@ -29,18 +43,30 @@ class NewConnectionProto {
 
 abstract Participant {
     + Participant(name)
+    + {abstract} ~Participant()
     + attach(observer)
     + notify(message)
     + {abstract} send(message)
     + disconnect()
 
-    - name
-    - observers
+    # name
+    # observers
+}
+
+class AcceptorFromGadgets {
+    + AcceptorFromGadgets(port)
+    + accept()
+
+    - {static} max_connections_wait
+    - input
+    - io_context
+    - acceptor
 }
 
 class ParticipantFromGadgets {
     + ParticipantFromGadgets(name, socket)
-    + read()
+
+    - socket
 }
 
 interface Observer {
