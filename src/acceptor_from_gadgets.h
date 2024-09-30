@@ -2,6 +2,7 @@
 #define ACCEPTOR_FROM_GADGETS_H
 
 #include <boost/asio.hpp>
+#include <boost/asio/write.hpp>
 #include <exception>
 #include <future>
 #include <istream>
@@ -24,7 +25,7 @@ namespace speaky {
 
 constexpr char delim { '@' };
 
-std::string read_raw_data_from_socket(boost::asio::ip::tcp::socket& socket) {
+inline std::string read_raw_data_from_socket(boost::asio::ip::tcp::socket& socket) {
   boost::asio::streambuf buf;
   boost::asio::read_until(socket, buf, delim);
 
@@ -40,14 +41,24 @@ class ParticipantFromGadgets : public Participant {
   explicit ParticipantFromGadgets(const std::string& name, boost::asio::ip::tcp::socket&& socket)
       : Participant { name }, socket { std::move(socket) } {}
 
-  void send(const std::string& message) override {}
+  void send(const std::string& message) override {
+    const auto serialized_message { serialize<MessageProto>(message) + delim };
+    boost::asio::write(socket, boost::asio::buffer(serialized_message));
+  }
 
-  void handle() {
+  void read() {
     for (;;) {
+      const auto message { read_message_from_socket() };
+      notify(message.get_message());
     }
   }
 
  private:
+  MessageProto read_message_from_socket() {
+    const auto data { read_raw_data_from_socket(socket) };
+    return deserialize<MessageProto>(data);
+  }
+
   boost::asio::ip::tcp::socket socket;
 };
 
@@ -69,7 +80,7 @@ class AcceptorFromGadgets {
       auto request { read_request_from_socket(socket) };
       auto participant { make_connection(std::move(socket), request) };
       input.register_user(request.get_room_id(), participant);
-      participant->handle();
+      participant->read();
     }
   }
 

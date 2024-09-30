@@ -68,7 +68,7 @@ class AcceptorFromGadgets {
 
 class ParticipantFromGadgets {
     + ParticipantFromGadgets(name, socket)
-    + handle()
+    + read()
 
     - socket
 }
