@@ -14,7 +14,7 @@
 #include "input.h"
 #include "participant.h"
 #include "proto_classes_wrapper.h"
-#include "src/serialize.h"
+#include "serialize.h"
 
 namespace speaky {
 
