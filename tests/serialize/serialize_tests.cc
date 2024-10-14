@@ -3,8 +3,8 @@
 
 #include <string>
 
-#include "src/proto_classes_wrapper.h"
-#include "src/serialize.h"
+#include "proto_classes_wrapper.h"
+#include "serialize.h"
 
 using namespace testing;
 using namespace speaky;

@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-package speaky;
-
-message Message {
-   string message = 1;
-}

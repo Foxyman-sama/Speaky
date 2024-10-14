@@ -3,10 +3,10 @@
 
 #include <string>
 
+#include "deserialize.h"
 #include "proto/message.pb.h"
 #include "proto/new_connection.pb.h"
-#include "src/deserialize.h"
-#include "src/proto_classes_wrapper.h"
+#include "proto_classes_wrapper.h"
 
 using namespace testing;
 using namespace speaky;

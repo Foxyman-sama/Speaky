@@ -1,3 +1,6 @@
 [submodule "lib/network_lib"]
 	path = lib/network_lib
 	url = git@github.com:Foxyman-sama/network_lib.git
+[submodule "Speaky-Serialize-Deserialize-Library"]
+	path = Speaky-Serialize-Deserialize-Library
+	url = https://github.com/Foxyman-sama/Speaky-Serialize-Deserialize-Library

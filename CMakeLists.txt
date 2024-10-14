@@ -19,7 +19,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
     proto_files
 )
 
-add_subdirectory(proto)
+add_subdirectory(Speaky-Serialize-Deserialize-Library)
 
 if (TEST_ENABLED)
     enable_testing()
