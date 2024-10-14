@@ -4,9 +4,6 @@ header Architecture
 
 !theme toy
 
-ProtoClass <|-- MessageProto
-ProtoClass <|-- NewConnectionProto
-
 Observer <--> Participant
 
 Participant <|-- ParticipantFromGadgets
@@ -17,32 +14,11 @@ ChatRoom <-- Input
 Participant <-- Input
 Input <-- AcceptorFromGadgets 
 ParticipantFromGadgets <-- AcceptorFromGadgets
-NewConnectionProto <-- AcceptorFromGadgets
-MessageProto <-- ParticipantFromGadgets
+proto_files <-- AcceptorFromGadgets
+proto_files <-- ParticipantFromGadgets
 
 
-interface ProtoClass {
-    + {abstract} ~ProtoClass()
-    + {abstract} serialize()
-    + {abstract} deserialize()
-}
-
-class MessageProto {
-    + MessageProto()
-    + MessageProto(message)
-    + get_message()
-
-    - obj
-}
-
-class NewConnectionProto {
-    + NewConnectionProto()
-    + NewConnectionProto(name, room_id)
-    + get_name()
-    + get_room_id()
-
-    - obj
-}
+package proto_files { }
 
 abstract Participant {
     + Participant(name)
