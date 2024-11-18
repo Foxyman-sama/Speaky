@@ -1,3 +1,19 @@
 cmake_minimum_required(VERSION 3.30)
-project(Speaky_Tests)
+project(SpeakyTests)
 
+set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
+set(CMAKE_CXX_STANDARD 26)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+find_package(GTest REQUIRED)
+
+add_executable(${PROJECT_NAME} register_tests.cc)
+target_include_directories(${PROJECT_NAME} PUBLIC 
+    ${CMAKE_SOURCE_DIR}
+)
+target_link_libraries(${PROJECT_NAME}  
+    GTest::gtest_main
+    GTest::gmock_main
+)
+
+add_test(${PROJECT_NAME} ${PROJECT_NAME})
