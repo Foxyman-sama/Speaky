@@ -27,7 +27,7 @@ class UserMock : public User {
 
 class register_tests : public Test, public Chat<RoomMock> {};
 
-TEST_F(register_tests, register_new_participant) {
+TEST_F(register_tests, register_new_user) {
   constexpr int test_id { 1 };
   const std::string test_name { "Dima" };
 
