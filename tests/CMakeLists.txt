@@ -1,5 +1,3 @@
-add_subdirectory(register_user)
-add_subdirectory(send_message)
-add_subdirectory(serialize)
-add_subdirectory(deserialize)
-add_subdirectory(unregister_user)
+cmake_minimum_required(VERSION 3.30)
+project(Speaky_Tests)
+

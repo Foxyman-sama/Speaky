@@ -16,10 +16,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 )
 target_link_libraries(${PROJECT_NAME} PUBLIC 
     ${Boost_LIBRARIES} 
-    proto_files
 )
-
-add_subdirectory(Speaky-Serialize-Deserialize-Library)
 
 if (TEST_ENABLED)
     enable_testing()
