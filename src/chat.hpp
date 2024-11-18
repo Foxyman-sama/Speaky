@@ -1,10 +1,18 @@
 #ifndef CHAT_HPP
 #define CHAT_HPP
 
+#include <deque>
 #include <memory>
 #include <set>
 #include <string>
 #include <unordered_map>
+
+struct UserMessage {
+  std::string username;
+  std::string text;
+
+  bool operator==(const UserMessage& other) const { return username == other.username && text == other.text; }
+};
 
 class User {
  public:
@@ -13,6 +21,8 @@ class User {
   int get_room_id() { return room_id; }
 
   std::string get_name() { return name; }
+
+  virtual void send(UserMessage user_message) {}
 
  private:
   int room_id;
@@ -31,21 +41,29 @@ class Room {
 
   void register_user(std::shared_ptr<User> user) { users.emplace(user); }
 
- private:
+  void send_chat_history(std::shared_ptr<User> user) {
+    for (auto&& user_message : chat_history) {
+      user->send(user_message);
+    }
+  }
+
+ protected:
   int room_id;
   std::set<std::shared_ptr<User>> users;
+  std::deque<UserMessage> chat_history;
 };
 
+template <typename RoomType = Room>
 class Chat {
  public:
   bool is_there_room(int room_id) { return rooms.contains(room_id); }
 
-  void create_room(int room_id) { rooms[room_id] = std::make_shared<Room>(room_id); }
+  void create_room(int room_id) { rooms[room_id] = std::make_shared<RoomType>(room_id); }
 
   void register_user(int room_id, std::shared_ptr<User> user) { rooms[room_id]->register_user(user); }
 
  protected:
-  std::unordered_map<int, std::shared_ptr<Room>> rooms;
+  std::unordered_map<int, std::shared_ptr<RoomType>> rooms;
 };
 
 #endif
