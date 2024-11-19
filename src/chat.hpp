@@ -1,6 +1,7 @@
 #ifndef CHAT_HPP
 #define CHAT_HPP
 
+#include <boost/asio.hpp>
 #include <deque>
 #include <memory>
 #include <set>
@@ -22,7 +23,7 @@ class User {
 
   std::string get_name() { return name; }
 
-  virtual void send(UserMessage user_message) {}
+  virtual void send(UserMessage user_message) = 0;
 
  private:
   int room_id;
@@ -53,14 +54,29 @@ class Room {
   std::deque<UserMessage> chat_history;
 };
 
+class TcpUser : public User {
+ public:
+  TcpUser(int room_id, std::string name, boost::asio::ip::tcp::socket&& socket)
+      : User { room_id, name }, socket { std::move(socket) } {}
+
+  void send(UserMessage user_message) override {}
+
+ private:
+  boost::asio::ip::tcp::socket socket;
+};
+
 template <typename RoomType = Room>
 class Chat {
  public:
+  Chat(int port) {}
+
   bool is_there_room(int room_id) { return rooms.contains(room_id); }
 
   void create_room(int room_id) { rooms[room_id] = std::make_shared<RoomType>(room_id); }
 
   void register_user(int room_id, std::shared_ptr<User> user) { rooms[room_id]->register_user(user); }
+
+  void start() {}
 
  protected:
   std::unordered_map<int, std::shared_ptr<RoomType>> rooms;
