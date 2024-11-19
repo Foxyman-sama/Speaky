@@ -1,6 +1,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include "boost/asio/io_context.hpp"
 #include "src/chat.hpp"
 
 using namespace testing;
@@ -25,10 +26,7 @@ class UserMock : public User {
   MOCK_METHOD(void, send, (UserMessage), (override));
 };
 
-class register_tests : public Test, public Chat<RoomMock> {
- public:
-  register_tests() : Chat { -1 } {}
-};
+class register_tests : public Test, public Chat<RoomMock> {};
 
 TEST_F(register_tests, register_new_user) {
   constexpr int test_id { 1 };

@@ -1,8 +1,10 @@
 #include <print>
 
+#include "boost/asio/io_context.hpp"
 #include "chat.hpp"
 
 int main(int argc, char** argv) {
-  Chat chat { 9090 };
+  boost::asio::io_context context;
+  Chat chat { 9090, context };
   chat.start();
 }

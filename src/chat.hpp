@@ -8,6 +8,11 @@
 #include <string>
 #include <unordered_map>
 
+#include "boost/asio/io_context.hpp"
+#include "boost/asio/ip/address_v4.hpp"
+#include "boost/asio/read_until.hpp"
+#include "boost/asio/streambuf.hpp"
+
 struct UserMessage {
   std::string username;
   std::string text;
@@ -68,7 +73,12 @@ class TcpUser : public User {
 template <typename RoomType = Room>
 class Chat {
  public:
-  Chat(int port) {}
+  Chat(unsigned short port, boost::asio::io_context& context)
+      : acceptor { new boost::asio::ip::tcp::acceptor { context, boost::asio::ip::tcp::v4() } } {
+    acceptor->set_option((boost::asio::ip::tcp::acceptor::reuse_address(true)));
+    acceptor->bind(boost::asio::ip::tcp::endpoint { boost::asio::ip::address_v4::any(), port });
+    acceptor->listen();
+  }
 
   bool is_there_room(int room_id) { return rooms.contains(room_id); }
 
@@ -76,10 +86,40 @@ class Chat {
 
   void register_user(int room_id, std::shared_ptr<User> user) { rooms[room_id]->register_user(user); }
 
-  void start() {}
+  void start() {
+    while (true) {
+      auto socket { acceptor->accept() };
+
+      boost::asio::streambuf room_id_buf;
+      boost::asio::read_until(socket, room_id_buf, '@');
+
+      boost::asio::streambuf name_buf;
+      boost::asio::read_until(socket, name_buf, '@');
+
+      std::istream is { &room_id_buf };
+      std::string room_id_temp;
+      std::getline(is, room_id_temp);
+
+      std::istream is2 { &name_buf };
+      std::string name;
+      std::getline(is2, name);
+
+      const auto room_id { std::stoi(room_id_temp) };
+      if (is_there_room(room_id) == false) {
+        create_room(room_id);
+      }
+
+      auto user { std::make_shared<TcpUser>(room_id, name, std::move(socket)) };
+      register_user(room_id, user);
+      rooms[room_id]->send_chat_history(user);
+    }
+  }
 
  protected:
+  Chat() = default;
+
   std::unordered_map<int, std::shared_ptr<RoomType>> rooms;
+  std::unique_ptr<boost::asio::ip::tcp::acceptor> acceptor;
 };
 
 #endif
