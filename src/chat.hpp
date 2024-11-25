@@ -90,19 +90,15 @@ class Chat {
     while (true) {
       auto socket { acceptor->accept() };
 
-      boost::asio::streambuf room_id_buf;
-      boost::asio::read_until(socket, room_id_buf, '@');
+      boost::asio::streambuf buf;
+      boost::asio::read_until(socket, buf, '@');
 
-      boost::asio::streambuf name_buf;
-      boost::asio::read_until(socket, name_buf, '@');
-
-      std::istream is { &room_id_buf };
+      std::istream is { &buf };
       std::string room_id_temp;
-      std::getline(is, room_id_temp);
+      std::getline(is, room_id_temp, ';');
 
-      std::istream is2 { &name_buf };
       std::string name;
-      std::getline(is2, name);
+      std::getline(is, name, '@');
 
       const auto room_id { std::stoi(room_id_temp) };
       if (is_there_room(room_id) == false) {
