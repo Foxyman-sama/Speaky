@@ -18,6 +18,8 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
     ${Boost_LIBRARIES} 
 )
 
+add_subdirectory(Packages)
+
 if (TEST_ENABLED)
     enable_testing()
     add_subdirectory(tests)

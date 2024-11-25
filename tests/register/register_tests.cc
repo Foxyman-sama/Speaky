@@ -1,6 +1,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include "Packages/packages.h"
 #include "boost/asio/io_context.hpp"
 #include "src/chat.hpp"
 
@@ -16,14 +17,14 @@ class RoomMock : public Room {
  public:
   RoomMock(int room_id) : Room { room_id } {}
 
-  void add_user_message(UserMessage user_message) { chat_history.push_back(user_message); }
+  void add_user_message(MessagePackage user_message) { chat_history.push_back(user_message); }
 };
 
 class UserMock : public User {
  public:
   UserMock(int room_id, std::string name) : User { room_id, name } {}
 
-  MOCK_METHOD(void, send, (UserMessage), (override));
+  MOCK_METHOD(void, send, (MessagePackage), (override));
 };
 
 class register_tests : public Test, public Chat<RoomMock> {};
@@ -46,7 +47,7 @@ TEST_F(register_tests, register_new_user) {
   ASSERT_EQ(1, rooms[test_id]->get_number_of_users());
   ASSERT_TRUE(rooms[test_id]->is_joined(user));
 
-  const UserMessage user_messages[3] {
+  const MessagePackage user_messages[3] {
     { test_name, "Hello, World!" },
     { "Ignat", "Hello, World!2" },
     { "Amir", "Hello, World!3" },

@@ -9,39 +9,11 @@
 #include <string>
 #include <unordered_map>
 
+#include "Packages/packages.h"
 #include "boost/asio/io_context.hpp"
 #include "boost/asio/ip/address_v4.hpp"
 #include "boost/asio/read_until.hpp"
 #include "boost/asio/streambuf.hpp"
-
-struct RegisterPackage {
-  RegisterPackage(const std::string& room_id, const std::string& username)
-      : room_id { room_id }, username { username } {}
-
-  RegisterPackage(const boost::property_tree::ptree& ptree)
-      : room_id { ptree.get<std::string>("room_id") }, username { ptree.get<std::string>("username") } {}
-
-  boost::property_tree::ptree make_json() {
-    boost::property_tree::ptree result;
-    result.put("room_id", room_id);
-    result.put("username", username);
-    return result;
-  }
-
-  constexpr bool operator==(const RegisterPackage& other) const noexcept {
-    return room_id == other.room_id && username == other.username;
-  }
-
-  std::string room_id;
-  std::string username;
-};
-
-struct UserMessage {
-  std::string username;
-  std::string text;
-
-  bool operator==(const UserMessage& other) const { return username == other.username && text == other.text; }
-};
 
 class User {
  public:
@@ -51,7 +23,7 @@ class User {
 
   std::string get_name() { return name; }
 
-  virtual void send(UserMessage user_message) = 0;
+  virtual void send(MessagePackage user_message) = 0;
 
  private:
   int room_id;
@@ -79,7 +51,7 @@ class Room {
  protected:
   int room_id;
   std::set<std::shared_ptr<User>> users;
-  std::deque<UserMessage> chat_history;
+  std::deque<MessagePackage> chat_history;
 };
 
 class TcpUser : public User {
@@ -87,7 +59,7 @@ class TcpUser : public User {
   TcpUser(int room_id, std::string name, boost::asio::ip::tcp::socket&& socket)
       : User { room_id, name }, socket { std::move(socket) } {}
 
-  void send(UserMessage user_message) override {}
+  void send(MessagePackage user_message) override {}
 
   void send(const std::string& message) { boost::asio::write(socket, boost::asio::buffer(message)); }
 
