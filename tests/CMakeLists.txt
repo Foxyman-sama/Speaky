@@ -1,2 +1,1 @@
 add_subdirectory(register)
-add_subdirectory(package)
