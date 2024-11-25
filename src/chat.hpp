@@ -66,6 +66,8 @@ class TcpUser : public User {
 
   void send(UserMessage user_message) override {}
 
+  void send(const std::string& message) { boost::asio::write(socket, boost::asio::buffer(message)); }
+
  private:
   boost::asio::ip::tcp::socket socket;
 };
@@ -107,6 +109,7 @@ class Chat {
 
       auto user { std::make_shared<TcpUser>(room_id, name, std::move(socket)) };
       register_user(room_id, user);
+      user->send("OK@");
       rooms[room_id]->send_chat_history(user);
     }
   }
