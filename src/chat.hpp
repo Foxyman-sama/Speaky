@@ -2,6 +2,7 @@
 #define CHAT_HPP
 
 #include <boost/asio.hpp>
+#include <boost/property_tree/ptree.hpp>
 #include <deque>
 #include <memory>
 #include <set>
@@ -12,6 +13,28 @@
 #include "boost/asio/ip/address_v4.hpp"
 #include "boost/asio/read_until.hpp"
 #include "boost/asio/streambuf.hpp"
+
+struct RegisterPackage {
+  RegisterPackage(const std::string& room_id, const std::string& username)
+      : room_id { room_id }, username { username } {}
+
+  RegisterPackage(const boost::property_tree::ptree& ptree)
+      : room_id { ptree.get<std::string>("room_id") }, username { ptree.get<std::string>("username") } {}
+
+  boost::property_tree::ptree make_json() {
+    boost::property_tree::ptree result;
+    result.put("room_id", room_id);
+    result.put("username", username);
+    return result;
+  }
+
+  constexpr bool operator==(const RegisterPackage& other) const noexcept {
+    return room_id == other.room_id && username == other.username;
+  }
+
+  std::string room_id;
+  std::string username;
+};
 
 struct UserMessage {
   std::string username;
