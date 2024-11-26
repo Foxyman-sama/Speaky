@@ -59,6 +59,9 @@ TEST_F(register_tests, register_new_user) {
     rooms[test_id]->add_user_message(user_message);
   }
 
+  const MessagePackage empty_message { "", "END" };
+  EXPECT_CALL(*user, send(empty_message));
+
   rooms[test_id]->send_chat_history(user);
 
   EXPECT_TRUE(Mock::VerifyAndClearExpectations(user.get()));

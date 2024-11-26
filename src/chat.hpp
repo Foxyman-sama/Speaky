@@ -53,6 +53,8 @@ class Room {
     for (auto&& user_message : chat_history) {
       user->send(user_message);
     }
+
+    user->send(MessagePackage { "", "END" });
   }
 
  protected:
