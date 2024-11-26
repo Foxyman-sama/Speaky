@@ -2,8 +2,11 @@
 #define CHAT_HPP
 
 #include <boost/asio.hpp>
+#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ptree_fwd.hpp>
 #include <deque>
+#include <iostream>
 #include <memory>
 #include <set>
 #include <string>
@@ -91,6 +94,12 @@ class Chat {
       boost::asio::read_until(socket, buf, '@');
 
       std::istream is { &buf };
+      // TODO найти способ удалить последний символ в istream
+      boost::property_tree::ptree ptree;
+      boost::property_tree::read_json(is, ptree);
+
+      std::cout << ptree.get<std::string>("name");
+
       std::string room_id_temp;
       std::getline(is, room_id_temp, ';');
 
