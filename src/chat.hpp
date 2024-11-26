@@ -45,6 +45,16 @@ class Room {
 
   bool is_joined(std::shared_ptr<User> user) { return users.contains(user); }
 
+  bool is_name_taken(const std::string& username) {
+    for (auto&& user : users) {
+      if (user->get_name() == username) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   int get_room_id() { return room_id; }
 
   void register_user(std::shared_ptr<User> user) { users.emplace(user); }
@@ -95,14 +105,20 @@ class Chat {
   void start() {
     while (true) {
       auto socket { acceptor->accept() };
-      const auto registration_package { read_from_socket<RegistrationPackage>(socket) };
+      auto registration_package { read_from_socket<RegistrationPackage>(socket) };
 
       const auto room_id { std::stoi(registration_package.room_id) };
       if (is_there_room(room_id) == false) {
         create_room(room_id);
       }
 
-      auto user { std::make_shared<TcpUser>(room_id, registration_package.username, std::move(socket)) };
+      while (rooms[room_id]->is_name_taken(registration_package.username)) {
+        static const StatusPackage name_taken_status { "NAME TAKEN" };
+        write_into_socket(socket, name_taken_status);
+        registration_package = read_from_socket<RegistrationPackage>(socket);
+      }
+
+      const auto user { std::make_shared<TcpUser>(room_id, registration_package.username, std::move(socket)) };
       register_user(room_id, user);
       user->send(StatusPackage { "OK" });
       rooms[room_id]->send_chat_history(user);
