@@ -121,25 +121,14 @@ class Chat {
   void start() {
     while (true) {
       auto socket { acceptor->accept() };
+      const auto registration_package { read_from_socket<RegistrationPackage>(socket) };
 
-      InternetPackage internet_package;
-      boost::asio::read(socket, boost::asio::buffer(internet_package.get_data(), internet_package.header_lentgh));
-      internet_package.reallocate();
-
-      boost::asio::read(socket, boost::asio::buffer(internet_package.get_body(), internet_package.get_body_length()));
-
-      boost::property_tree::ptree ptree;
-      std::istringstream iss { std::string { internet_package.get_body() } };
-      boost::property_tree::read_json(iss, ptree);
-
-      RegisterPackage register_package { ptree };
-
-      const auto room_id { std::stoi(register_package.room_id) };
+      const auto room_id { std::stoi(registration_package.room_id) };
       if (is_there_room(room_id) == false) {
         create_room(room_id);
       }
 
-      auto user { std::make_shared<TcpUser>(room_id, register_package.username, std::move(socket)) };
+      auto user { std::make_shared<TcpUser>(room_id, registration_package.username, std::move(socket)) };
       register_user(room_id, user);
       user->send(StatusPackage { "OK" });
       rooms[room_id]->send_chat_history(user);
