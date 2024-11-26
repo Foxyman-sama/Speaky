@@ -49,9 +49,9 @@ TEST_F(register_tests, register_new_user) {
   ASSERT_TRUE(rooms[test_id]->is_joined(user));
 
   const MessagePackage user_messages[3] {
-    { test_name, "Hello, World!" },
-    { "Ignat", "Hello, World!2" },
-    { "Amir", "Hello, World!3" },
+    MessagePackage { test_name, "Hello, World!" },
+    MessagePackage { "Ignat", "Hello, World!2" },
+    MessagePackage { "Amir", "Hello, World!3" },
   };
 
   for (auto&& user_message : user_messages) {

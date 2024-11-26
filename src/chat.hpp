@@ -1,6 +1,8 @@
 #ifndef CHAT_HPP
 #define CHAT_HPP
 
+#include <unistd.h>
+
 #include <boost/asio.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -64,39 +66,9 @@ class TcpUser : public User {
   TcpUser(int room_id, std::string name, boost::asio::ip::tcp::socket&& socket)
       : User { room_id, name }, socket { std::move(socket) } {}
 
-  void send(MessagePackage message_package) override {
-    const auto register_json { message_package.make_json() };
+  void send(MessagePackage message_package) override { write_into_socket(socket, message_package); }
 
-    std::ostringstream oss;
-    boost::property_tree::write_json(oss, register_json);
-    const auto json_str { oss.str() };
-    const auto json_size { json_str.size() };
-
-    InternetPackage internet_package;
-    std::memcpy(internet_package.get_data(), &json_size, internet_package.header_lentgh);
-    internet_package.reallocate();
-    std::memcpy(internet_package.get_body(), json_str.c_str(), internet_package.get_body_length());
-    boost::asio::write(socket,
-                       boost::asio::buffer(internet_package.get_data(),
-                                           internet_package.header_lentgh + internet_package.get_body_length()));
-  }
-
-  void send(StatusPackage status_package) override {
-    const auto register_json { status_package.make_json() };
-
-    std::ostringstream oss;
-    boost::property_tree::write_json(oss, register_json);
-    const auto json_str { oss.str() };
-    const auto json_size { json_str.size() };
-
-    InternetPackage internet_package;
-    std::memcpy(internet_package.get_data(), &json_size, internet_package.header_lentgh);
-    internet_package.reallocate();
-    std::memcpy(internet_package.get_body(), json_str.c_str(), internet_package.get_body_length());
-    boost::asio::write(socket,
-                       boost::asio::buffer(internet_package.get_data(),
-                                           internet_package.header_lentgh + internet_package.get_body_length()));
-  }
+  void send(StatusPackage status_package) override { write_into_socket(socket, status_package); }
 
  private:
   boost::asio::ip::tcp::socket socket;
