@@ -2,10 +2,13 @@
 #define CHAT_HPP
 
 #include <boost/asio.hpp>
+#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ptree_fwd.hpp>
 #include <deque>
 #include <memory>
 #include <set>
+#include <sstream>
 #include <string>
 #include <unordered_map>
 
@@ -23,7 +26,9 @@ class User {
 
   std::string get_name() { return name; }
 
-  virtual void send(MessagePackage user_message) = 0;
+  virtual void send(MessagePackage message_package) = 0;
+
+  virtual void send(StatusPackage status_package) = 0;
 
  private:
   int room_id;
@@ -59,9 +64,39 @@ class TcpUser : public User {
   TcpUser(int room_id, std::string name, boost::asio::ip::tcp::socket&& socket)
       : User { room_id, name }, socket { std::move(socket) } {}
 
-  void send(MessagePackage user_message) override {}
+  void send(MessagePackage message_package) override {
+    const auto register_json { message_package.make_json() };
 
-  void send(const std::string& message) { boost::asio::write(socket, boost::asio::buffer(message)); }
+    std::ostringstream oss;
+    boost::property_tree::write_json(oss, register_json);
+    const auto json_str { oss.str() };
+    const auto json_size { json_str.size() };
+
+    InternetPackage internet_package;
+    std::memcpy(internet_package.get_data(), &json_size, internet_package.header_lentgh);
+    internet_package.reallocate();
+    std::memcpy(internet_package.get_body(), json_str.c_str(), internet_package.get_body_length());
+    boost::asio::write(socket,
+                       boost::asio::buffer(internet_package.get_data(),
+                                           internet_package.header_lentgh + internet_package.get_body_length()));
+  }
+
+  void send(StatusPackage status_package) override {
+    const auto register_json { status_package.make_json() };
+
+    std::ostringstream oss;
+    boost::property_tree::write_json(oss, register_json);
+    const auto json_str { oss.str() };
+    const auto json_size { json_str.size() };
+
+    InternetPackage internet_package;
+    std::memcpy(internet_package.get_data(), &json_size, internet_package.header_lentgh);
+    internet_package.reallocate();
+    std::memcpy(internet_package.get_body(), json_str.c_str(), internet_package.get_body_length());
+    boost::asio::write(socket,
+                       boost::asio::buffer(internet_package.get_data(),
+                                           internet_package.header_lentgh + internet_package.get_body_length()));
+  }
 
  private:
   boost::asio::ip::tcp::socket socket;
@@ -87,24 +122,26 @@ class Chat {
     while (true) {
       auto socket { acceptor->accept() };
 
-      boost::asio::streambuf buf;
-      boost::asio::read_until(socket, buf, '@');
+      InternetPackage internet_package;
+      boost::asio::read(socket, boost::asio::buffer(internet_package.get_data(), internet_package.header_lentgh));
+      internet_package.reallocate();
 
-      std::istream is { &buf };
-      std::string room_id_temp;
-      std::getline(is, room_id_temp, ';');
+      boost::asio::read(socket, boost::asio::buffer(internet_package.get_body(), internet_package.get_body_length()));
 
-      std::string name;
-      std::getline(is, name, '@');
+      boost::property_tree::ptree ptree;
+      std::istringstream iss { std::string { internet_package.get_body() } };
+      boost::property_tree::read_json(iss, ptree);
 
-      const auto room_id { std::stoi(room_id_temp) };
+      RegisterPackage register_package { ptree };
+
+      const auto room_id { std::stoi(register_package.room_id) };
       if (is_there_room(room_id) == false) {
         create_room(room_id);
       }
 
-      auto user { std::make_shared<TcpUser>(room_id, name, std::move(socket)) };
+      auto user { std::make_shared<TcpUser>(room_id, register_package.username, std::move(socket)) };
       register_user(room_id, user);
-      user->send("OK@");
+      user->send(StatusPackage { "OK" });
       rooms[room_id]->send_chat_history(user);
     }
   }

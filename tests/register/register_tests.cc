@@ -25,6 +25,7 @@ class UserMock : public User {
   UserMock(int room_id, std::string name) : User { room_id, name } {}
 
   MOCK_METHOD(void, send, (MessagePackage), (override));
+  MOCK_METHOD(void, send, (StatusPackage), (override));
 };
 
 class register_tests : public Test, public Chat<RoomMock> {};
